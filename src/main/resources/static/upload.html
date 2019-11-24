@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="shortcut icon" href="#">
+    <title>文件上传</title>
+    <style>
+        body{
+            font-family: "Microsoft YaHei", serif;
+            font-size: 14px;
+        }
+        label{
+            margin-right: 10px;
+        }
+        .uploadBtn{
+            border: 1px solid #B3B3B3;
+            background-color: #DDDDDD;
+            width: 80px;
+            height: 28px;
+            outline: 0;
+            cursor: pointer;
+        }
+        .serverEnv{
+            width: 400px;
+            height: 80px;
+        }
+        .versionType{
+            width: 400px;
+            height: 80px;
+        }
+        .percent{
+            width: 300px;
+            height: 4px;
+            padding: 1px;
+            border: 1px solid #A2A2A2;
+            margin-top: 8px;
+        }
+        .percent span{
+            width: 0;
+            height: 100%;
+            background-color: #00A700;
+            display: block;
+        }
+        .file{
+            width: 400px;
+            height: 80px;
+        }
+        .uploadDiv{
+            width: 400px;
+            height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="serverEnv">
+        <div>服务环境</div>
+        <input name="env" type="radio" id="a" value="sit"><label for="a">SIT环境</label>
+        <input name="env" type="radio" id="b" value="uat"><label for="b">UAT环境</label>
+    </div>
+
+    <div class="versionType">
+        <div>版本类型</div>
+        <input name="type" type="radio" id="c" value="mainline"><label for="c">主线版</label>
+        <input name="type" type="radio" id="d" value="stable"><label for="d">稳定版</label>
+        <input name="type" type="radio" id="e" value="show"><label for="e">演示版</label>
+    </div>
+
+    <div class="file">
+        <input id="fileInput" type="file" accept=".ipa,.apk" />
+        <div class="percent"><span id="percentSpan"></span></div>
+    </div>
+
+    <div class="uploadDiv">
+        <button id="uploadBtn" class="uploadBtn">上传</button>
+    </div>
+
+</body>
+
+<script type="text/javascript">
+
+var uploadBtn = document.getElementById('uploadBtn');
+var percentSpan = document.getElementById('percentSpan');
+
+/**
+ * 上传按钮
+ */
+uploadBtn.addEventListener('click', function(){
+    var files = document.getElementById('fileInput').files;
+
+    var envRadio = document.getElementsByName('env');
+    var typeRadio = document.getElementsByName('type');
+    
+    var envValue = '';
+    for (var e = 0; e < envRadio.length; e++) {
+        if (envRadio[e].checked) {
+            envValue = envRadio[e].value;
+        }
+    }
+    if (envValue === '') {
+        alert("请选择服务环境");
+        return;
+    }
+
+    var typeValue = '';
+    for (var t = 0; t < typeRadio.length; t++) {
+        if (typeRadio[t].checked) {
+            typeValue = typeRadio[t].value;
+        }
+    }
+    if (typeValue === '') {
+        alert("请选择版本类型");
+        return;
+    }
+ 
+    if(files.length === 0) {
+        alert("请选择文件");
+        return;
+    }
+    
+    var form = new FormData(), 
+        url = 'http://localhost:8080/file/upload',
+        file = files[0];
+    form.append('file', file);
+    form.append('env', envValue);
+    form.append('type', typeValue);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", url, true);
+
+    //上传进度事件
+    xhr.upload.addEventListener("progress", function(result) {
+        if (result.lengthComputable) {
+            //上传进度
+            var percent = (result.loaded / result.total * 100).toFixed(2);
+            console.log(percent);
+            percentSpan.style.cssText = "width: "+percent+"%;";
+        }
+    }, false);
+
+    xhr.addEventListener("readystatechange", function() {
+        var result = xhr;
+        if (result.status !== 200) {
+            alert(result.responseText);
+            console.log('上传失败', result.status, result.statusText, result.response);
+        }else if (result.readyState === 4) {
+            alert(result.responseText);
+            console.log('上传成功', result);
+        }
+    });
+    xhr.send(form); //开始上传
+}, false);
+
+</script>
+</html>
